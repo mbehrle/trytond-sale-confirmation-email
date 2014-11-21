@@ -1,0 +1,2 @@
+trytond-sale-confirmation-email
+===============================
