@@ -1,0 +1,5 @@
+[run]
+source = trytond.modules.sale_confirmation_email
+
+[report]
+omit = */tests/*, */setup.py

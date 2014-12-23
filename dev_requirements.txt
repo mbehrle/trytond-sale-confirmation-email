@@ -1,0 +1,6 @@
+# Install packages from requirements.txt
+-r requirements.txt
+
+psycopg2
+coverage
+flake8
