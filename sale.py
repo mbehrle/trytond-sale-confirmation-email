@@ -8,6 +8,7 @@
 from trytond.pool import PoolMeta, Pool
 from trytond.model import Workflow, ModelView, fields
 from trytond.config import CONFIG
+from trytond.report import Report
 
 __all__ = ['Sale']
 __metaclass__ = PoolMeta
@@ -49,6 +50,7 @@ class Sale:
         if to_emails:
             subject = self._get_subject_for_email()
             html_template, text_template = self._get_email_template_paths()
+            template_context = self._get_email_template_context()
 
             email_message = Mail.render_email(
                 from_email=CONFIG['smtp_from'],
@@ -57,6 +59,7 @@ class Sale:
                 text_template=text_template,
                 html_template=html_template,
                 sale=self,
+                **template_context
             )
 
             EmailQueue.queue_mail(
@@ -94,6 +97,15 @@ class Sale:
             'sale_confirmation_email/emails/sale-confirmation-html.html',
             'sale_confirmation_email/emails/sale-confirmation-text.html'
         )
+
+    def _get_email_template_context(self):
+        """
+        Add to email template context
+        """
+        return {
+            'formatLang': lambda *args, **kargs: Report.format_lang(
+                *args, **kargs)
+        }
 
     @classmethod
     @ModelView.button
