@@ -7,7 +7,7 @@
 """
 from trytond.pool import PoolMeta, Pool
 from trytond.model import Workflow, ModelView, fields
-from trytond.config import CONFIG
+from trytond.config import config
 from trytond.report import Report
 
 __all__ = ['Sale']
@@ -48,13 +48,14 @@ class Sale:
 
         to_emails = self._get_receiver_email_address()
         if to_emails:
+            sender = config.get('email', 'from')
             subject = self._get_subject_for_email()
             html_template, text_template = self._get_email_template_paths()
             template_context = self._get_email_template_context()
 
             email_message = Mail.render_email(
-                from_email=CONFIG['smtp_from'],
-                to=to_emails,
+                from_email=sender,
+                to=', '.join(to_emails),
                 subject=subject,
                 text_template=text_template,
                 html_template=html_template,
@@ -63,7 +64,7 @@ class Sale:
             )
 
             EmailQueue.queue_mail(
-                CONFIG['smtp_from'], to_emails + bcc_emails,
+                sender, to_emails + bcc_emails,
                 email_message.as_string()
             )
 

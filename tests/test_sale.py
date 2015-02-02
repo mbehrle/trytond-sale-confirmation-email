@@ -13,9 +13,9 @@ import trytond.tests.test_tryton
 from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
 from trytond.transaction import Transaction
 from trytond.pyson import Eval
-from trytond.config import CONFIG
+from trytond.config import config
 
-CONFIG['smtp_from'] = 'umang.arora@openlabs.co.in'
+config.set('email', 'from', 'umang.arora@openlabs.co.in')
 
 
 class TestSale(unittest.TestCase):
@@ -278,7 +278,7 @@ class TestSale(unittest.TestCase):
                 emails[0].msg.find(self.party.email), -1
             )
             self.assertNotEqual(
-                emails[0].msg.find(CONFIG['smtp_from']), -1
+                emails[0].msg.find(config.get('email', 'from')), -1
             )
             self.assertNotEqual(
                 emails[0].msg.find('Order Confirmed'), -1
