@@ -30,9 +30,9 @@ class SQLiteTest(Command):
         if self.distribution.tests_require:
             self.distribution.fetch_build_eggs(self.distribution.tests_require)
 
-        from trytond.config import CONFIG
-        CONFIG['db_type'] = 'sqlite'
-        CONFIG['smtp_from'] = 'no_reply@openlabs.co.in'
+        from trytond.config import config
+        os.environ['TRYTOND_DATABASE_URI'] = 'sqlite://'
+        config.set('email', 'from', 'no_reply@openlabs.co.in')
         os.environ['DB_NAME'] = ':memory:'
 
         from tests import suite
@@ -61,13 +61,7 @@ class PostgresTest(Command):
         if self.distribution.tests_require:
             self.distribution.fetch_build_eggs(self.distribution.tests_require)
 
-        from trytond.config import CONFIG
-        CONFIG['db_type'] = 'postgresql'
-        CONFIG['db_host'] = 'localhost'
-        CONFIG['db_port'] = 5432
-        CONFIG['db_user'] = 'postgres'
-        CONFIG['smtp_from'] = 'no_reply@openlabs.co.in'
-
+        os.environ['TRYTOND_DATABASE_URI'] = 'postgresql://'
         os.environ['DB_NAME'] = 'test_' + str(int(time.time()))
 
         from tests import suite
