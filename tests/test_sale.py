@@ -289,6 +289,10 @@ class TestSale(unittest.TestCase):
             sale.send_confirmation_email()
             self.assertEqual(len(EmailQueue.search([])), 1)
 
+            # Test copying sale
+            new_sale = self.Sale.copy([sale])
+            self.assertFalse(new_sale[0].email_sent)
+
 
 def suite():
     "Define suite"
