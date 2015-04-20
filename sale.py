@@ -119,3 +119,15 @@ class Sale:
 
         for sale in sales:
             sale.send_confirmation_email()
+
+    @classmethod
+    def copy(cls, records, default=None):
+        """
+        Duplicating records
+        """
+        if default is None:
+            default = {}
+
+        default['email_sent'] = False
+
+        return super(Sale, cls).copy(records, default)
