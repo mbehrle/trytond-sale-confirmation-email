@@ -30,21 +30,13 @@ class Sale:
            * HTML: `<module_name>/emails/sale-confirmation-html.jinja`
         """
         EmailQueue = Pool().get('email.queue')
-        ModelData = Pool().get('ir.model.data')
-        Group = Pool().get('res.group')
         Sale = Pool().get('sale.sale')
         Mail = Pool().get('mail.mail')
 
         if self.email_sent:
             return
 
-        group_id = ModelData.get_id(
-            "sale_confirmation_email", "order_confirmation_receivers"
-        )
-        bcc_emails = map(
-            lambda user: user.email,
-            filter(lambda user: user.email, Group(group_id).users)
-        )
+        bcc_emails = self._get_bcc_emails()
 
         to_emails = self._get_receiver_email_address()
         if to_emails:
@@ -107,6 +99,22 @@ class Sale:
             'formatLang': lambda *args, **kargs: Report.format_lang(
                 *args, **kargs)
         }
+
+    def _get_bcc_emails(self):
+        """
+        Return a list of bcc emails
+        """
+        ModelData = Pool().get('ir.model.data')
+        Group = Pool().get('res.group')
+
+        group_id = ModelData.get_id(
+            "sale_confirmation_email", "order_confirmation_receivers"
+        )
+        bcc_emails = map(
+            lambda user: user.email,
+            filter(lambda user: user.email, Group(group_id).users)
+        )
+        return bcc_emails
 
     @classmethod
     @ModelView.button
