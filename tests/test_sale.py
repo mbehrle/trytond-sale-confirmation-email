@@ -8,7 +8,9 @@ from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
 import trytond.tests.test_tryton
-from trytond.tests.test_tryton import POOL, USER, DB_NAME, CONTEXT
+from trytond.tests.test_tryton import (
+    POOL, USER, DB_NAME, CONTEXT, ModuleTestCase
+)
 from trytond.transaction import Transaction
 from trytond.pyson import Eval
 from trytond.config import config
@@ -16,7 +18,10 @@ from trytond.config import config
 config.set('email', 'from', 'umang.arora@openlabs.co.in')
 
 
-class TestSale(unittest.TestCase):
+class TestSale(ModuleTestCase):
+    "Test Sale"
+
+    module = 'sale_confirmation_email'
 
     def setUp(self):
         """
