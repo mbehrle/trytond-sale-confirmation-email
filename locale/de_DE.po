@@ -1,0 +1,11 @@
+#
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:sale.sale,email_sent:"
+msgid "Confirmation Email Sent?"
+msgstr "Bestätigungsmail gesendet"
+
+msgctxt "model:res.group,name:order_confirmation_receivers"
+msgid "Order Confirmation Receivers"
+msgstr "Empfänger von Auftragsbestätigungen"
