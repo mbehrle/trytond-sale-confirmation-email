@@ -124,6 +124,8 @@ class Sale:
         super(Sale, cls).confirm(sales)
 
         for sale in sales:
+            if (hasattr(cls, 'channel') and sale.channel_type != 'webshop'):
+                continue
             sale.send_confirmation_email()
 
     @classmethod
