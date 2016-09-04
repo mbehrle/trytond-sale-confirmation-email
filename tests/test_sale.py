@@ -9,7 +9,7 @@ from decimal import Decimal
 
 import trytond.tests.test_tryton
 from trytond.tests.test_tryton import (
-    POOL, USER, DB_NAME, CONTEXT, ModuleTestCase
+    POOL, USER, ModuleTestCase, with_transaction
 )
 from trytond.transaction import Transaction
 from trytond.pyson import Eval
@@ -91,9 +91,10 @@ class TestSale(ModuleTestCase):
         account_create_chart = POOL.get(
             'account.create_chart', type="wizard")
 
-        account_template, = AccountTemplate.search(
-            [('parent', '=', None)]
-        )
+        account_template, = AccountTemplate.search([
+            ('parent', '=', None),
+            ('name', '=', 'Minimal Account Chart')
+        ])
 
         session_id, _, _ = account_create_chart.create()
         create_chart = account_create_chart(session_id)
@@ -177,7 +178,9 @@ class TestSale(ModuleTestCase):
             'company': self.company,
             'main_company': self.company,
         })
-        CONTEXT.update(self.User.get_preferences(context_only=True))
+        Transaction().context.update(
+            self.User.get_preferences(context_only=True)
+        )
 
         # Create Fiscal Year
         self._create_fiscal_year(company=self.company.id)
@@ -219,18 +222,20 @@ class TestSale(ModuleTestCase):
                 'revenue', company=self.company.id).id,
             'account_expense': self._get_account_by_kind(
                 'expense', company=self.company.id).id,
+            'accounting': True,
         }])
 
         self.product_template, = self.ProductTemplate.create([{
             'name': 'Bat Mobile',
             'type': 'goods',
             'salable': True,
-            'category': self.product_category.id,
+            'account_category': self.product_category.id,
+            'categories': [('add', [self.product_category.id])],
             'default_uom': self.uom.id,
             'sale_uom': self.uom.id,
             'list_price': Decimal('20000'),
             'cost_price': Decimal('15000'),
-            'account_category': True,
+            'accounts_category': True,
         }])
 
         self.product, = self.Product.create([{
@@ -238,6 +243,7 @@ class TestSale(ModuleTestCase):
             'code': '123',
         }])
 
+    @with_transaction()
     def test_0010_test_email_on_confirm(self):
         """
         Test if an email is sent when sale is confirmed
@@ -245,56 +251,55 @@ class TestSale(ModuleTestCase):
         Date = POOL.get('ir.date')
         EmailQueue = POOL.get('email.queue')
 
-        with Transaction().start(DB_NAME, USER, context=CONTEXT):
-            self.setup_defaults()
+        self.setup_defaults()
 
-            sale, = self.Sale.create([{
-                'reference': 'Test Sale',
-                'payment_term': self.payment_term.id,
-                'currency': self.company.currency.id,
-                'party': self.party.id,
-                'invoice_address': self.party.addresses[0].id,
-                'shipment_address': self.party.addresses[0].id,
-                'sale_date': Date.today(),
-                'company': self.company.id,
-            }])
-            sale_line, = self.SaleLine.create([{
-                'sale': sale,
-                'type': 'line',
-                'quantity': 2,
-                'unit': self.uom,
-                'unit_price': 20000,
-                'description': 'Test description',
-                'product': self.product.id
-            }])
+        sale, = self.Sale.create([{
+            'reference': 'Test Sale',
+            'payment_term': self.payment_term.id,
+            'currency': self.company.currency.id,
+            'party': self.party.id,
+            'invoice_address': self.party.addresses[0].id,
+            'shipment_address': self.party.addresses[0].id,
+            'sale_date': Date.today(),
+            'company': self.company.id,
+        }])
+        sale_line, = self.SaleLine.create([{
+            'sale': sale,
+            'type': 'line',
+            'quantity': 2,
+            'unit': self.uom,
+            'unit_price': 20000,
+            'description': 'Test description',
+            'product': self.product.id
+        }])
 
-            self.Sale.quote([sale])
-            self.assertEqual(len(EmailQueue.search([])), 0)
+        self.Sale.quote([sale])
+        self.assertEqual(len(EmailQueue.search([])), 0)
 
-            # Confirm Sale
-            self.Sale.confirm([sale])
+        # Confirm Sale
+        self.Sale.confirm([sale])
 
-            emails = EmailQueue.search([])
-            self.assertEqual(len(emails), 1)
-            self.assertEqual(emails[0].to_addrs, self.party.email)
-            self.assertNotEqual(
-                emails[0].msg.find(self.party.email), -1
-            )
-            self.assertNotEqual(
-                emails[0].msg.find(config.get('email', 'from')), -1
-            )
-            self.assertNotEqual(
-                emails[0].msg.find('Order Confirmed'), -1
-            )
-            self.assertTrue(sale.email_sent)
-            # Try sending email for same sale and test if email is
-            # not sent again
-            sale.send_confirmation_email()
-            self.assertEqual(len(EmailQueue.search([])), 1)
+        emails = EmailQueue.search([])
+        self.assertEqual(len(emails), 1)
+        self.assertEqual(emails[0].to_addrs, self.party.email)
+        self.assertNotEqual(
+            emails[0].msg.find(self.party.email), -1
+        )
+        self.assertNotEqual(
+            emails[0].msg.find(config.get('email', 'from')), -1
+        )
+        self.assertNotEqual(
+            emails[0].msg.find('Order Confirmed'), -1
+        )
+        self.assertTrue(sale.email_sent)
+        # Try sending email for same sale and test if email is
+        # not sent again
+        sale.send_confirmation_email()
+        self.assertEqual(len(EmailQueue.search([])), 1)
 
-            # Test copying sale
-            new_sale = self.Sale.copy([sale])
-            self.assertFalse(new_sale[0].email_sent)
+        # Test copying sale
+        new_sale = self.Sale.copy([sale])
+        self.assertFalse(new_sale[0].email_sent)
 
 
 def suite():
