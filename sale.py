@@ -94,7 +94,7 @@ class Sale:
         Add to email template context
         """
         return {
-            'formatLang': lambda *args, **kargs: Report.format_lang(
+            'format_number': lambda *args, **kargs: Report.format_number(
                 *args, **kargs)
         }
 
